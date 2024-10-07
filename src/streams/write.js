@@ -1,27 +1,29 @@
-import { createWriteStream } from 'fs';
-import { fileURLToPath } from 'url';
-import { join, dirname } from 'path';
-
-const __filename = fileURLToPath(import.meta.url);
-const __dirname = dirname(__filename);
+import { createWriteStream } from "fs";
+import { pipeline } from "stream/promises";
+import { fileURLToPath } from "url";
+import path from "path";
+import { dirname } from "path";
 
 const write = async () => {
-  const fileToWrite = 'files/fileToWrite.txt';
-  const filePath = join(__dirname, fileToWrite);
+  const fileName = "fileToWrite.txt";
+
+  const currentModulePath = dirname(fileURLToPath(import.meta.url));
+
+  const filePath = path.resolve(currentModulePath, "files", fileName);
 
   const writeStream = createWriteStream(filePath);
 
-  // Pipe the data from process.stdin to the writable stream
-  process.stdin.pipe(writeStream);
+  console.log(filePath);
 
-  // Handle events for the Writable stream
-  writeStream.on('finish', () => {
-    console.log(`Write operation completed. Data written to ${fileToWrite}`);
-  });
-
-  writeStream.on('error', (error) => {
-    console.error(`FS operation failed: ${error.message}`);
-  });
+  try {
+    console.log(
+      "Please write some text. After writing the text press CTRL + C to exit and check FileToWrite.txt"
+    );
+    await pipeline(process.stdin, writeStream);
+  } catch (error) {
+    console.error("Write operation failed:", error);
+    console.error(error.stack);
+  }
 };
 
 await write();
