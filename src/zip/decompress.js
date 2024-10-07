@@ -1,29 +1,30 @@
 import { createReadStream, createWriteStream } from 'fs';
-import { createGunzip } from 'zlib';
 import { fileURLToPath } from 'url';
-import { join, dirname } from 'path';
+import { dirname, join } from 'path';
+import zlib from 'zlib';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
 
+const pathToFile = join(__dirname, 'files', 'archive.gz');
+const outputPath = join(__dirname, 'files', 'fileToCompress.txt');
+
 const decompress = async () => {
-  const archivePath = join(__dirname, 'archive.gz');
-  const decompressedFilePath = join(__dirname, 'fileToCompress.txt');
+  const readStream = createReadStream(pathToFile);
+  const writeStream = createWriteStream(outputPath);
+  const gunzip = zlib.createGunzip();
 
-  const readStream = createReadStream(archivePath);
+  readStream.pipe(gunzip).pipe(writeStream);
 
-  const gunzipStream = createGunzip();
-
-  const writeStream = createWriteStream(decompressedFilePath);
-
-  readStream.pipe(gunzipStream).pipe(writeStream);
-
-  writeStream.on('finish', () => {
-    console.log(`Decompression completed. File decompressed to ${decompressedFilePath}`);
-  });
-
-  writeStream.on('error', (error) => {
-    console.error(`Decompression failed: ${error.message}`);
+  return new Promise((resolve, reject) => {
+    writeStream.on('finish', () => {
+      console.log('File decompressed successfully');
+      resolve();
+    });
+    writeStream.on('error', (error) => {
+      console.log('Some error with gunzip');
+      reject(error);
+    });
   });
 };
 
