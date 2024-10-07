@@ -1,30 +1,30 @@
 import { createReadStream, createWriteStream } from 'fs';
-import { createGzip } from 'zlib';
 import { fileURLToPath } from 'url';
-import { join, dirname } from 'path';
+import { dirname, join } from 'path';
+import zlib from 'zlib';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
 
+const pathToFile = join(__dirname, 'files', 'fileToCompress.txt');
+const outputPath = join(__dirname, 'files', 'archive.gz');
+
 const compress = async () => {
-  const fileToCompress = 'files/fileToCompress.txt';
-  const filePath = join(__dirname, fileToCompress);
-  const archivePath = join(__dirname, 'archive.gz');
+  const readStream = createReadStream(pathToFile);
+  const writeStream = createWriteStream(outputPath);
+  const gzip = zlib.createGzip();
 
-  const readStream = createReadStream(filePath);
+  readStream.pipe(gzip).pipe(writeStream);
 
-  const gzipStream = createGzip();
-
-  const writeStream = createWriteStream(archivePath);
-
-  readStream.pipe(gzipStream).pipe(writeStream);
-
-  writeStream.on('finish', () => {
-    console.log(`Compression completed. File compressed to ${archivePath}`);
-  });
-
-  writeStream.on('error', (error) => {
-    console.error(`Compression failed: ${error.message}`);
+  return new Promise((resolve, reject) => {
+    writeStream.on('finish', () => {
+      console.log('File compressed successfully');
+      resolve();
+    });
+    writeStream.on('error', (error) => {
+      console.log('Some error with gzip');
+      reject(error);
+    });
   });
 };
 
