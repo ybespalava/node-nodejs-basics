@@ -1,21 +1,10 @@
-import { parentPort, workerData, isMainThread } from 'worker_threads';
+import { workerData, parentPort} from 'worker_threads';
 
-const nthFibonacci = (n) => (n < 2 ? n : nthFibonacci(n - 1) + nthFibonacci(n - 2));
+export const nthFibonacci = (n) => (n < 2 ? n : nthFibonacci(n - 1) + nthFibonacci(n - 2));
 
-const sendResult = (result) => {
-
-  if (isMainThread) {
-    console.error('This function should be called from a worker thread');
-    return;
-  }
-
-
-  parentPort.postMessage(result);
+export const sendResult = () => {
+  const result = parentPort.postMessage(nthFibonacci(workerData));
+  return parentPort.postMessage(nthFibonacci(workerData));
 };
 
-if (!isMainThread) {
-
-  const n = workerData;
-  const result = nthFibonacci(n);
-  sendResult(result);
-}
+sendResult();
