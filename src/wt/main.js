@@ -1,35 +1,39 @@
-import { Worker } from 'worker_threads';
-import os from 'os';
+import { Worker} from 'worker_threads';
+import os from 'os'
+import { fileURLToPath } from 'url';
+import { dirname, join, resolve } from 'path';
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = dirname(__filename);
+const workerFilePath = join(__dirname, 'worker.js');
 
 const performCalculations = async () => {
-      const numCPUs = os.cpus().length;
-  const workers = [];
-  const results = [];
+    let allCores = os.cpus();
+    let results = [];
+    let currentNumber = 10;
 
-  const workerPromises = Array.from({ length: numCPUs }, (_, index) => {
-    const workerData = index + 10;
-    return new Promise((resolve, reject) => {
-      const worker = new Worker('./worker.js', { workerData });
-
-      worker.on('message', (message) => {
-        results.push({ status: 'resolved', data: message });
-        resolve();
+    results = await Promise.allSettled(allCores.map(() => {
+      return new Promise((resolve, reject) => {
+        const worker = new Worker(workerFilePath, {workerData: currentNumber++});
+        worker.on('message', (message) => {          
+          return resolve(message);
+        });
+        worker.on('error', (message) => {          
+          return reject(message);
+        });
       });
+    }));
 
-      worker.on('error', (error) => {
-        results.push({ status: 'error', data: null });
-        reject(error);
-      });
-
-      workers.push(worker);
+    const output = results.map((k) => {
+      return {
+        'status': k.status === 'fulfilled' ? 'resolve' : 'error',
+        'data': k.status === 'fulfilled' ? k.value : null,
+      }
     });
-  });
 
-  await Promise.all(workerPromises);
+    console.log("output = ", output);
+    return output;
 
-  console.log(results);
-
-  workers.forEach(worker => worker.terminate());
-};
+};   
 
 await performCalculations();
