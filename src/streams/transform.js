@@ -1,24 +1,21 @@
-import { Transform } from 'stream';
+import { Transform } from "stream";
+import { pipeline } from "stream/promises";
 
 const transform = async () => {
-
   const reverseTransform = new Transform({
-    transform(chunk, encoding, callback) {
-      const reversedChunk = chunk.toString().split('').reverse().join('');
-      this.push(reversedChunk);
+    transform(chunk, _, callback) {
+      const reversedText = chunk.toString().split("").reverse().join("");
+      this.push(reversedText);
       callback();
-    }
-  });
-  
-  process.stdin.pipe(reverseTransform).pipe(process.stdout);
-
-  reverseTransform.on('finish', () => {
-    console.log('Transform operation completed');
+    },
   });
 
-  reverseTransform.on('error', (error) => {
-    console.error(`Transform operation failed: ${error.message}`);
-  });
+  try {
+    await pipeline(process.stdin, reverseTransform, process.stdout);
+    console.log("Transform operation complete.");
+  } catch (error) {
+    console.error("Transform operation failed:", error);
+  }
 };
 
 await transform();
