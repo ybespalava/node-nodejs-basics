@@ -13,4 +13,4 @@ const spawnChildProcess = async (args) => {
   childProcess.stdout.pipe(process.stdout);
 };
 
-spawnChildProcess(["node", "js"]);
+spawnChildProcess(["1", "2", "3"]);
