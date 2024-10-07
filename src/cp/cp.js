@@ -1,21 +1,16 @@
-import { spawn } from 'child_process';
+import { spawn } from "child_process";
+import { fileURLToPath } from "url";
+import path from "path";
+import { dirname } from "path";
 
 const spawnChildProcess = async (args) => {
+  const currentDir = dirname(fileURLToPath(import.meta.url));
 
-  const childProcess = spawn('node', ['script.js', ...args], { stdio: ['pipe', 'pipe', 'pipe', 'ipc'] });
+  const childModule = path.resolve(currentDir, "files", "script.js");
+  const childProcess = spawn("node", [childModule, ...args]);
 
-  childProcess.stdout.on('data', (data) => {
-    console.log(`Received from child process: ${data.toString()}`);
-  });
-
-  process.stdin.on('data', (data) => {
-    childProcess.stdin.write(data);
-  });
-
-  childProcess.on('exit', (code) => {
-    console.log(`Child process exited with code ${code}`);
-    process.stdin.end(); 
-  });
+  process.stdin.pipe(childProcess.stdin);
+  childProcess.stdout.pipe(process.stdout);
 };
 
-spawnChildProcess(['arg1', 'arg2']);
+spawnChildProcess(["node", "js"]);
