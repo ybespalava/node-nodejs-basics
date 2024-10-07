@@ -1,27 +1,23 @@
-import { createReadStream } from 'fs';
-import { fileURLToPath } from 'url';
-import { join, dirname } from 'path';
-
-const __filename = fileURLToPath(import.meta.url);
-const __dirname = dirname(__filename);
+import { createReadStream } from "fs";
+import { pipeline } from "stream/promises";
+import { fileURLToPath } from "url";
+import path from "path";
+import { dirname } from "path";
 
 const read = async () => {
-  const fileToRead = 'files/fileToRead.txt';
-  const filePath = join(__dirname, fileToRead);
+  const fileName = "fileToRead.txt";
+
+  const currentModulePath = dirname(fileURLToPath(import.meta.url));
+
+  const filePath = path.resolve(currentModulePath, "files", fileName);
 
   const readStream = createReadStream(filePath);
 
-  readStream.on('data', (chunk) => {
-    process.stdout.write(chunk);
-  });
-
-  readStream.on('end', () => {
-    console.log('\nRead operation completed');
-  });
-
-  readStream.on('error', (error) => {
-    console.error(`FS operation failed: ${error.message}`);
-  });
+  try {
+    await pipeline(readStream, process.stdout);
+  } catch (error) {
+    console.error("Read operation failed:", error);
+  }
 };
 
 await read();
