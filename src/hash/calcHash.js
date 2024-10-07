@@ -2,7 +2,7 @@ import { createReadStream } from 'fs';
 import { createHash } from 'crypto';
 
 const calculateHash = async () => {
-    const fileToCalculateHashFor = 'files/fileToCalculateHashFor.txt';
+  const fileToCalculateHashFor = 'src/hash/files/fileToCalculateHashFor.txt';
   const hash = createHash('sha256');
 
   return new Promise((resolve, reject) => {
